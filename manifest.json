@@ -1,0 +1,65 @@
+{
+  "manifest_version": 2,
+  "module_id": "org.3mm.child-center",
+  "name": "Child Center",
+  "version": "0.6.7",
+  "description": "Local-first child activity center workflow application.",
+  "runtimes": ["core", "ui"],
+  "entrypoints": {
+    "core": "application-extension.json",
+    "ui": "compiled-ui.json"
+  },
+  "compatibility": {
+    "protocol": "1.0",
+    "architectures": ["any"]
+  },
+  "capabilities": {
+    "provides": [],
+    "consumes": ["identifier.scan.v1"]
+  },
+  "permissions": [
+    "data.read",
+    "data.write",
+    "events.consume",
+    "network.outbound",
+    "process.spawn",
+    "secrets.use"
+  ],
+  "configuration_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "READER_DEVICE_ID": {
+        "title": "Reader device",
+        "type": "string",
+        "pattern": "^dev_[0-9a-f]{32}$",
+        "description": "Generic 3mm device that publishes identifier.scan.v1 events."
+      },
+      "BARSY_API_URL": {
+        "type": "string",
+        "format": "uri",
+        "description": "Administrator-approved Barsy server origin."
+      },
+      "BARSY_API_CREDENTIAL": {
+        "type": "string",
+        "description": "Opaque platform credential reference; never a credential value.",
+        "x-3mm-secret-reference": true
+      },
+      "DISPLAY_TIMEZONE": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "description": "IANA timezone used only for operator and kiosk display."
+      }
+    }
+  },
+  "configuration_defaults": {
+    "BARSY_API_URL": "http://127.0.0.1",
+    "DISPLAY_TIMEZONE": "Europe/Sofia"
+  },
+  "registrations": [],
+  "health_check": {
+    "type": "json_file",
+    "path": "application-extension.json"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "compiled_ui_version": 1,
+  "module_id": "org.3mm.child-center",
+  "version": "0.6.7",
+  "entrypoints": [
+    {
+      "entrypoint_id": "cashier_desk",
+      "kind": "route",
+      "source": "source/frontend/StaffCashier.vue",
+      "label": {"en": "Child Center checkout", "translations": {"bg": "Каса на детския център"}},
+      "route": "/child-center/cashier"
+    },
+    {
+      "entrypoint_id": "tablet_registration",
+      "kind": "route",
+      "source": "source/frontend/KioskRegistration.vue",
+      "label": {
+        "en": "Child Center registration",
+        "translations": {"bg": "Регистрация за детски център"}
+      },
+      "route": "/child-center/register"
+    },
+    {
+      "entrypoint_id": "kiosk_registration",
+      "kind": "route",
+      "source": "source/frontend/KioskRuntime.vue",
+      "label": {
+        "en": "Child Center kiosk runtime",
+        "translations": {"bg": "Kiosk режим на детския център"}
+      },
+      "route": "/child-center/kiosk-runtime"
+    },
+    {
+      "entrypoint_id": "operator_desk",
+      "kind": "route",
+      "source": "source/frontend/StaffOperator.vue",
+      "label": {
+        "en": "Clients and bracelets",
+        "translations": {"bg": "Клиенти и гривни"}
+      },
+      "route": "/child-center/operator"
+    },
+    {
+      "entrypoint_id": "active_visits",
+      "kind": "route",
+      "source": "source/frontend/StaffVisits.vue",
+      "label": {
+        "en": "Active visits and measured time",
+        "translations": {"bg": "Активни посещения и отчетено време"}
+      },
+      "route": "/child-center/visits"
+    },
+    {
+      "entrypoint_id": "visit_history",
+      "kind": "route",
+      "source": "source/frontend/StaffHistory.vue",
+      "label": {
+        "en": "Visit history",
+        "translations": {"bg": "История на посещенията"}
+      },
+      "route": "/child-center/history"
+    },
+    {
+      "entrypoint_id": "administration",
+      "kind": "route",
+      "source": "source/frontend/Administration.vue",
+      "label": {
+        "en": "Child Center administration",
+        "translations": {"bg": "Настройки на детския център"}
+      },
+      "route": "/child-center/admin"
+    }
+  ]
+}

@@ -1,0 +1,1460 @@
+{
+  "application_extension_version": 1,
+  "module_id": "org.3mm.child-center",
+  "version": "0.6.7",
+  "service": {
+    "artifact": "service/child_center_application-0.6.7-py3-none-any.whl",
+    "artifact_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "entrypoint": "child_center_application.service:create_service",
+    "sdk_version": "1.0",
+    "health_operation_id": "health",
+    "startup_timeout_seconds": 30,
+    "shutdown_timeout_seconds": 15
+  },
+  "permissions": [
+    {"permission_id":"payments_manage","label":{"en":"Take payments and close accounts","translations":{"bg":"Плащане и приключване на сметки"}},"description":{"en":"Confirm Barsy payments and fiscal closure from Operator.","translations":{"bg":"Потвърждаване на плащания и фискално приключване от Operator."}}},
+    {
+      "permission_id": "registrations_manage",
+      "label": {"en": "Manage registrations", "translations": {"bg": "Управление на регистрации"}},
+      "description": {"en": "Review and approve kiosk registrations.", "translations": {"bg": "Преглед и одобрение на регистрации от kiosk."}}
+    },
+    {
+      "permission_id": "children_manage",
+      "label": {"en": "Manage children and bracelets", "translations": {"bg": "Управление на деца и гривни"}},
+      "description": {"en": "Maintain approved child records and bracelet assignment history.", "translations": {"bg": "Поддръжка на одобрени записи и история на гривните."}}
+    },
+    {
+      "permission_id": "visits_manage",
+      "label": {"en": "Manage visits", "translations": {"bg": "Управление на посещения"}},
+      "description": {"en": "Start, close and correct local visits.", "translations": {"bg": "Стартиране, приключване и коригиране на локални посещения."}}
+    },
+    {
+      "permission_id": "configuration_manage",
+      "label": {"en": "Manage configuration", "translations": {"bg": "Управление на настройките"}},
+      "description": {"en": "Manage reader purposes and Barsy table mappings.", "translations": {"bg": "Управление на режими на четците и съответствия към Barsy маси."}}
+    },
+    {
+      "permission_id": "privacy_manage",
+      "label": {"en": "Manage personal data", "translations": {"bg": "Управление на лични данни"}},
+      "description": {"en": "Run scoped export and erasure operations.", "translations": {"bg": "Изпълнение на ограничени export и erasure операции."}}
+    }
+  ],
+  "operations": [
+{"operation_id":"list_checkout_accounts","kind":"query","audiences":["operator","administrator"],"required_permission":"payments_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":100000}},"required":["offset"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"},"child_name":{"type":"string","maxLength":120},"table_name":{"type":"string","maxLength":120},"account_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"visit_state":{"type":"string","enum":["active","closed","void"]},"admitted":{"type":"boolean"},"live":{"type":"boolean"},"pending":{"type":"boolean"},"error_code":{"type":["string","null"],"maxLength":64}},"required":["visit_id","child_name","table_name","account_id","visit_state","admitted","live","pending","error_code"],"additionalProperties":false},"maxItems":50},"has_more":{"type":"boolean"}},"required":["items","has_more"],"additionalProperties":false}},
+{"operation_id":"get_checkout_account","kind":"query","audiences":["operator","administrator"],"required_permission":"payments_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"}},"required":["visit_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"choices":{"type":"array","items":{"type":"object","properties":{"article_id":{"type":"integer","minimum":1,"maximum":2147483647},"label":{"type":"string","maxLength":160},"allowed_for_child":{"type":"boolean"}},"required":["article_id","label","allowed_for_child"],"additionalProperties":false},"maxItems":0},"commands":{"type":"array","items":{"type":"object","properties":{"command_id":{"type":"string","pattern":"^commercial_[0-9a-f]{32}$"},"kind":{"type":"string","enum":["time","consumption","payment"]},"state":{"type":"string","enum":["prepared","ambiguous","confirmed","failed","mock_confirmed"]},"article_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"quantity":{"type":["string","null"],"maxLength":40},"consumer":{"type":["string","null"],"enum":["child","guardian",null]},"error_code":{"type":["string","null"],"maxLength":64}},"required":["command_id","kind","state","article_id","quantity","consumer","error_code"],"additionalProperties":false},"maxItems":50}},"required":["choices","commands"],"additionalProperties":false}},
+{"operation_id":"verify_account_closure","kind":"command","audiences":["operator","administrator"],"required_permission":"payments_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"},"reviewed":{"type":"boolean","const":true}},"required":["visit_id","reviewed"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["released"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"cancel_pending_admission","kind":"command","audiences":["operator","administrator"],"required_permission":"visits_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"}},"required":["visit_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["released"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"list_operator_accounts","kind":"query","audiences":["operator","administrator"],"required_permission":"visits_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":100000}},"required":["offset"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"},"child_name":{"type":"string","maxLength":120},"table_name":{"type":"string","maxLength":120},"account_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"visit_state":{"type":"string","enum":["active","closed","void"]},"admitted":{"type":"boolean"},"live":{"type":"boolean"},"pending":{"type":"boolean"},"error_code":{"type":["string","null"],"maxLength":64}},"required":["visit_id","child_name","table_name","account_id","visit_state","admitted","live","pending","error_code"],"additionalProperties":false},"maxItems":50},"has_more":{"type":"boolean"}},"required":["items","has_more"],"additionalProperties":false}},
+{"operation_id":"get_operator_account","kind":"query","audiences":["operator","administrator"],"required_permission":"visits_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"}},"required":["visit_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"choices":{"type":"array","items":{"type":"object","properties":{"article_id":{"type":"integer","minimum":1,"maximum":2147483647},"label":{"type":"string","maxLength":160},"allowed_for_child":{"type":"boolean"}},"required":["article_id","label","allowed_for_child"],"additionalProperties":false},"maxItems":128},"commands":{"type":"array","items":{"type":"object","properties":{"command_id":{"type":"string","pattern":"^commercial_[0-9a-f]{32}$"},"kind":{"type":"string","enum":["time","consumption","payment"]},"state":{"type":"string","enum":["prepared","ambiguous","confirmed","failed","mock_confirmed"]},"article_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"quantity":{"type":["string","null"],"maxLength":40},"consumer":{"type":["string","null"],"enum":["child","guardian",null]},"error_code":{"type":["string","null"],"maxLength":64}},"required":["command_id","kind","state","article_id","quantity","consumer","error_code"],"additionalProperties":false},"maxItems":50}},"required":["choices","commands"],"additionalProperties":false}},
+{"operation_id":"add_account_consumption","kind":"command","audiences":["operator","administrator"],"required_permission":"visits_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"},"article_id":{"type":"integer","minimum":1,"maximum":2147483647},"quantity":{"type":"string","pattern":"^[0-9]{1,3}(\\.[0-9]{1,3})?$","maxLength":7},"consumer":{"type":"string","enum":["child","guardian"]}},"required":["visit_id","article_id","quantity","consumer"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"command_id":{"type":"string","pattern":"^commercial_[0-9a-f]{32}$"},"state":{"type":"string","enum":["prepared","ambiguous","confirmed","failed","mock_confirmed"]}},"required":["command_id","state"],"additionalProperties":false}},
+{"operation_id":"preview_account_payment","kind":"command","audiences":["operator","administrator"],"required_permission":"payments_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"}},"required":["visit_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"quote_id":{"type":"string","pattern":"^quote_[0-9a-f]{32}$"},"account_id":{"type":"integer","minimum":1,"maximum":2147483647},"amount":{"type":"string","maxLength":40},"currency_id":{"type":"integer","minimum":1,"maximum":2147483647},"methods":{"type":"array","items":{"type":"object","properties":{"paymethod_id":{"type":"integer","minimum":1,"maximum":2147483647},"label":{"type":"string","maxLength":160},"type_id":{"type":"integer","enum":[1,5]}},"required":["paymethod_id","label","type_id"],"additionalProperties":false},"maxItems":32},"expires_at":{"type":"string","format":"date-time"},"currency_code":{"type":"string","pattern":"^[A-Z]{3}$"}},"required":["quote_id","account_id","amount","currency_id","methods","expires_at","currency_code"],"additionalProperties":false}},
+{"operation_id":"pay_account","kind":"command","audiences":["operator","administrator"],"required_permission":"payments_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"quote_id":{"type":"string","pattern":"^quote_[0-9a-f]{32}$"},"paymethod_id":{"type":"integer","minimum":1,"maximum":2147483647},"confirmed":{"type":"boolean","const":true}},"required":["quote_id","paymethod_id","confirmed"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"command_id":{"type":"string","pattern":"^commercial_[0-9a-f]{32}$"},"state":{"type":"string","enum":["prepared","ambiguous","confirmed","failed","mock_confirmed"]}},"required":["command_id","state"],"additionalProperties":false}},
+{"operation_id":"retry_account_command","kind":"command","audiences":["operator","administrator"],"required_permission":"visits_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"command_id":{"type":"string","pattern":"^commercial_[0-9a-f]{32}$"}},"required":["command_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"command_id":{"type":"string","pattern":"^commercial_[0-9a-f]{32}$"},"state":{"type":"string","enum":["prepared","ambiguous","confirmed","failed","mock_confirmed"]}},"required":["command_id","state"],"additionalProperties":false}},
+{"operation_id":"close_test_account","kind":"command","audiences":["operator","administrator"],"required_permission":"visits_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"}},"required":["visit_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["released"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"get_timing_configuration","kind":"query","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"output_schema":{"type":"object","properties":{"active_mode":{"type":"string","enum":["local_quantity","barsy_timer"]},"can_change_active_profile":{"type":"boolean"},"local_rounding":{"type":"string","enum":["ceil_total_minute"]},"local_quantity":{"type":"object","properties":{"article_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"label":{"type":["string","null"],"maxLength":160},"quantity_precision":{"type":["integer","null"],"minimum":3,"maximum":9}},"required":["article_id","label","quantity_precision"],"additionalProperties":false},"barsy_timer":{"type":"object","properties":{"article_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"label":{"type":["string","null"],"maxLength":160},"quantity_precision":{"type":["integer","null"],"minimum":0,"maximum":9},"time_interval":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"available":{"type":"boolean","const":false},"unavailable_reason":{"type":"string","enum":["stop_api_unverified"]}},"required":["article_id","label","quantity_precision","time_interval","available","unavailable_reason"],"additionalProperties":false}},"required":["active_mode","can_change_active_profile","local_quantity","barsy_timer","local_rounding"],"additionalProperties":false}},
+{"operation_id":"set_timing_profile","kind":"command","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"mode":{"type":"string","enum":["local_quantity","barsy_timer"]},"article_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647}},"required":["mode","article_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["updated"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"activate_timing_mode","kind":"command","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"mode":{"type":"string","enum":["local_quantity","barsy_timer"]}},"required":["mode"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["updated"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"retry_stay_bill","kind":"command","audiences":["operator","administrator"],"required_permission":"visits_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"bill_id":{"type":"string","pattern":"^bill_[0-9a-f]{32}$"}},"required":["bill_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["prepared"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"list_stay_bills","kind":"query","audiences":["operator","administrator"],"required_permission":"visits_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":100000}},"required":["offset"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"items":{"type":"array","maxItems":50,"items":{"type":"object","properties":{"bill_id":{"type":"string","pattern":"^bill_[0-9a-f]{32}$"},"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"},"rounded_minutes":{"type":"integer","minimum":0},"quantity":{"type":"string","maxLength":40},"state":{"type":"string","enum":["prepared","retryable","ambiguous","confirmed","mock_confirmed"]},"remote_account_id":{"type":["integer","null"],"minimum":1},"error_code":{"type":["string","null"],"maxLength":64},"child_display_name":{"type":"string","maxLength":120}},"required":["bill_id","visit_id","rounded_minutes","quantity","state","remote_account_id","error_code","child_display_name"],"additionalProperties":false}},"has_more":{"type":"boolean"}},"required":["items","has_more"],"additionalProperties":false}},
+{"operation_id":"get_stay_billing","kind":"query","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":100000}},"required":["offset"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"settings":{"type":"object","properties":{"article_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"label":{"type":["string","null"],"maxLength":160},"quantity_precision":{"type":["integer","null"],"minimum":3,"maximum":9}},"required":["article_id","label","quantity_precision"],"additionalProperties":false},"items":{"type":"array","maxItems":50,"items":{"type":"object","properties":{"bill_id":{"type":"string","pattern":"^bill_[0-9a-f]{32}$"},"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"},"article_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"rounded_minutes":{"type":"integer","minimum":0},"quantity":{"type":"string","maxLength":40,"pattern":"^[0-9]+\\.[0-9]+$"},"state":{"type":"string","enum":["prepared","retryable","ambiguous","confirmed","mock_confirmed"]},"remote_account_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"error_code":{"type":["string","null"],"maxLength":64}},"required":["bill_id","visit_id","article_id","rounded_minutes","quantity","state","remote_account_id","error_code"],"additionalProperties":false}},"has_more":{"type":"boolean"}},"required":["settings","items","has_more"],"additionalProperties":false}},
+{"operation_id":"set_stay_article","kind":"command","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"article_id":{"type":"integer","minimum":1,"maximum":2147483647}},"required":["article_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["updated"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"reconcile_stay_bill","kind":"command","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"bill_id":{"type":"string","pattern":"^bill_[0-9a-f]{32}$"},"account_id":{"type":"integer","minimum":1,"maximum":2147483647}},"required":["bill_id","account_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["confirmed"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"list_consumption_choices","kind":"query","audiences":["kiosk","operator","administrator"],"idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"output_schema":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"code":{"type":"string","maxLength":40,"pattern":"^barsy_[0-9]+$"},"label":{"type":"string","maxLength":160}},"required":["code","label"],"additionalProperties":false},"maxItems":128}},"required":["items"],"additionalProperties":false},"required_permission":"registrations_manage"},
+{"operation_id":"discover_consumption_articles","kind":"query","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{"query":{"type":"string","maxLength":120},"offset":{"type":"integer","minimum":0,"maximum":100000}},"required":["query","offset"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"article_id":{"type":"integer","minimum":1,"maximum":2147483647},"label":{"type":"string","maxLength":160},"enabled":{"type":"boolean"}},"required":["article_id","label","enabled"],"additionalProperties":false},"maxItems":50},"has_more":{"type":"boolean"}},"required":["items","has_more"],"additionalProperties":false}},
+{"operation_id":"set_consumption_article","kind":"command","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"article_id":{"type":"integer","minimum":1,"maximum":2147483647},"enabled":{"type":"boolean"}},"required":["article_id","enabled"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["updated"]}},"required":["status"],"additionalProperties":false}},
+{"operation_id":"list_barsy_parent_links","kind":"query","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"forbidden","audit":"redacted","input_schema":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":100000}},"required":["offset"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"guardian_id":{"type":"string","maxLength":80},"display_name":{"type":"string","maxLength":120},"state":{"type":"string","enum":["not_queued","prepared","ambiguous","confirmed","manual_review"]},"remote_client_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647},"error_code":{"type":["string","null"],"maxLength":64}},"required":["guardian_id","display_name","state","remote_client_id","error_code"],"additionalProperties":false},"maxItems":50},"has_more":{"type":"boolean"}},"required":["items","has_more"],"additionalProperties":false}},
+{"operation_id":"sync_barsy_parent","kind":"command","audiences":["administrator"],"required_permission":"configuration_manage","idempotency":"required","audit":"redacted","input_schema":{"type":"object","properties":{"guardian_id":{"type":"string","maxLength":80,"pattern":"^guardian_[0-9a-f]{32}$"},"client_id":{"type":["integer","null"],"minimum":1,"maximum":2147483647}},"required":["guardian_id","client_id"],"additionalProperties":false},"output_schema":{"type":"object","properties":{"status":{"type":"string","enum":["updated"]}},"required":["status"],"additionalProperties":false}},
+    {
+      "operation_id": "set_barsy_delivery_mode",
+      "kind": "command",
+      "audiences": [
+        "administrator"
+      ],
+      "required_permission": "configuration_manage",
+      "idempotency": "required",
+      "audit": "metadata",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "updated"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "deliver_barsy_commands",
+      "kind": "job",
+      "audiences": [
+        "internal"
+      ],
+      "idempotency": "required",
+      "audit": "metadata",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "processed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "processed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "reconcile_barsy_account",
+      "kind": "command",
+      "audiences": [
+        "administrator"
+      ],
+      "required_permission": "configuration_manage",
+      "idempotency": "required",
+      "audit": "metadata",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "pattern": "^barsy_command_[0-9a-f]{32}$"
+          },
+          "account_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "command_id",
+          "account_id"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "released"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "health",
+      "kind": "query",
+      "audiences": ["internal"],
+      "idempotency": "forbidden",
+      "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": false},
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["ready"]},
+          "schema_revision": {"type": "string", "enum": ["0015"]},
+          "service_version": {"type": "string", "enum": ["0.6.7"]}
+        },
+        "required": ["status", "schema_revision", "service_version"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "submit_registration",
+      "kind": "command",
+      "audiences": ["kiosk"],
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "guardian": {
+            "type": "object",
+            "properties": {
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "phone": {"type": "string", "maxLength": 40},
+              "email": {"type": "string", "maxLength": 160},
+              "consent_version": {"type": "string", "minLength": 1, "maxLength": 64},
+              "consented_at": {"type": "string", "format": "date-time"}
+            },
+            "required": ["display_name", "phone", "email", "consent_version", "consented_at"],
+            "additionalProperties": false
+          },
+          "children": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "properties": {
+                "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "allowed_consumption_codes": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1, "maxLength": 80}
+                }
+              },
+              "required": ["display_name", "allowed_consumption_codes"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["guardian", "children"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"},
+          "status": {"type": "string", "enum": ["submitted"]},
+          "receipt_token": {"type": "string", "pattern": "^receipt_[0-9a-f]{64}$"}
+        },
+        "required": ["registration_id", "status", "receipt_token"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "register_client",
+      "kind": "command",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "registrations_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "guardian": {
+            "type": "object",
+            "properties": {
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "phone": {"type": "string", "maxLength": 40},
+              "email": {"type": "string", "maxLength": 160},
+              "consent_version": {"type": "string", "minLength": 1, "maxLength": 64},
+              "consented_at": {"type": "string", "format": "date-time"}
+            },
+            "required": ["display_name", "phone", "email", "consent_version", "consented_at"],
+            "additionalProperties": false
+          },
+          "child": {
+            "type": "object",
+            "properties": {
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "allowed_consumption_codes": {
+                "type": "array",
+                "maxItems": 64,
+                "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1, "maxLength": 80}
+              },
+              "opaque_identifier": {"type": "string", "minLength": 1, "maxLength": 512}
+            },
+            "required": ["display_name", "allowed_consumption_codes", "opaque_identifier"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["guardian", "child"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"},
+          "child_id": {"type": "string", "pattern": "^child_[0-9a-f]{32}$"},
+          "assignment_id": {"type": "string", "pattern": "^assign_[0-9a-f]{32}$"},
+          "status": {"type": "string", "enum": ["approved"]}
+        },
+        "required": ["registration_id", "child_id", "assignment_id", "status"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "get_kiosk_registration_result",
+      "kind": "query",
+      "audiences": ["kiosk"],
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"},
+          "receipt_token": {"type": "string", "pattern": "^receipt_[0-9a-f]{64}$"}
+        },
+        "required": ["registration_id", "receipt_token"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "registration_id": {"type": "string"},
+          "status": {"type": "string", "enum": ["submitted", "approved", "rejected"]}
+        },
+        "required": ["registration_id", "status"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "list_registrations",
+      "kind": "query",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "registrations_manage",
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": ["string", "null"], "enum": ["submitted", "approved", "rejected", null]},
+          "cursor": {"type": ["string", "null"], "maxLength": 256},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+        },
+        "required": ["status", "cursor", "limit"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "properties": {
+                "registration_id": {"type": "string"},
+                "status": {"type": "string"},
+                "submitted_at": {"type": "string"},
+                "child_count": {"type": "integer", "minimum": 1}
+              },
+              "required": ["registration_id", "status", "submitted_at", "child_count"],
+              "additionalProperties": false
+            }
+          },
+          "next_cursor": {"type": ["string", "null"]}
+        },
+        "required": ["items", "next_cursor"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "list_clients",
+      "kind": "query",
+      "audiences": ["administrator"],
+      "required_permission": "registrations_manage",
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "maxLength": 120},
+          "cursor": {"type": ["string", "null"], "maxLength": 256},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+        },
+        "required": ["query", "cursor", "limit"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "properties": {
+                "registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"},
+                "status": {"type": "string", "enum": ["submitted", "approved", "rejected"]},
+                "guardian_display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "child_display_names": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "items": {"type": "string", "minLength": 1, "maxLength": 120}
+                },
+                "updated_at": {"type": "string", "format": "date-time"}
+              },
+              "required": ["registration_id", "status", "guardian_display_name", "child_display_names", "updated_at"],
+              "additionalProperties": false
+            }
+          },
+          "next_cursor": {"type": ["string", "null"]}
+        },
+        "required": ["items", "next_cursor"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "get_registration",
+      "kind": "query",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "registrations_manage",
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {"registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"}},
+        "required": ["registration_id"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"},
+          "status": {"type": "string", "enum": ["submitted", "approved", "rejected"]},
+          "submitted_at": {"type": "string", "format": "date-time"},
+          "guardian": {
+            "type": "object",
+            "properties": {
+              "guardian_id": {"type": "string", "pattern": "^guardian_[0-9a-f]{32}$"},
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "phone": {"type": "string", "maxLength": 40},
+              "email": {"type": "string", "maxLength": 160}
+            },
+            "required": ["guardian_id", "display_name", "phone", "email"],
+            "additionalProperties": false
+          },
+          "children": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "properties": {
+                "child_id": {"type": "string", "pattern": "^child_[0-9a-f]{32}$"},
+                "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "allowed_consumption_codes": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1, "maxLength": 80}
+                },
+                "status": {"type": "string", "enum": ["pending", "active", "anonymized", "erased"]},
+                "identifier_assignments": {
+                  "type": "array",
+                  "maxItems": 100,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "assignment_id": {"type": "string", "pattern": "^assign_[0-9a-f]{32}$"},
+                      "assigned_at": {"type": "string", "format": "date-time"},
+                      "retired_at": {"type": ["string", "null"], "format": "date-time"},
+                      "retire_reason": {"type": ["string", "null"], "enum": ["replaced", "damaged", "lost", "manual", null]}
+                    },
+                    "required": ["assignment_id", "assigned_at", "retired_at", "retire_reason"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["child_id", "display_name", "allowed_consumption_codes", "status", "identifier_assignments"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["registration_id", "status", "submitted_at", "guardian", "children"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "correct_registration",
+      "kind": "command",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "registrations_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"},
+          "guardian": {
+            "type": "object",
+            "properties": {
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "phone": {"type": "string", "maxLength": 40},
+              "email": {"type": "string", "maxLength": 160}
+            },
+            "required": ["display_name", "phone", "email"],
+            "additionalProperties": false
+          },
+          "children": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "properties": {
+                "child_id": {"type": "string", "pattern": "^child_[0-9a-f]{32}$"},
+                "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "allowed_consumption_codes": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1, "maxLength": 80}
+                }
+              },
+              "required": ["child_id", "display_name", "allowed_consumption_codes"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["registration_id", "guardian", "children"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {"status": {"type": "string", "enum": ["corrected"]}},
+        "required": ["status"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "update_client",
+      "kind": "command",
+      "audiences": ["administrator"],
+      "required_permission": "registrations_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"},
+          "guardian": {
+            "type": "object",
+            "properties": {
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "phone": {"type": "string", "maxLength": 40},
+              "email": {"type": "string", "maxLength": 160}
+            },
+            "required": ["display_name", "phone", "email"],
+            "additionalProperties": false
+          },
+          "children": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "properties": {
+                "child_id": {"type": "string", "pattern": "^child_[0-9a-f]{32}$"},
+                "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "allowed_consumption_codes": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1, "maxLength": 80}
+                }
+              },
+              "required": ["child_id", "display_name", "allowed_consumption_codes"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["registration_id", "guardian", "children"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {"status": {"type": "string", "enum": ["updated"]}},
+        "required": ["status"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "delete_client",
+      "kind": "command",
+      "audiences": ["administrator"],
+      "required_permission": "privacy_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"},
+          "reason": {"type": "string", "enum": ["administrator_request"]}
+        },
+        "required": ["registration_id", "reason"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["deleted"]},
+          "retained_visit_count": {"type": "integer", "minimum": 0}
+        },
+        "required": ["status", "retained_visit_count"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "approve_registration",
+      "kind": "command",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "registrations_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {"registration_id": {"type": "string", "pattern": "^reg_[0-9a-f]{32}$"}},
+        "required": ["registration_id"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["approved"]},
+          "guardian_id": {"type": "string"},
+          "child_ids": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"type": "string"}}
+        },
+        "required": ["status", "guardian_id", "child_ids"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "list_operator_clients",
+      "kind": "query",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "registrations_manage",
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {"type":"object","properties":{"query":{"type":"string","maxLength":120},"status":{"type":["string","null"],"enum":["approved","submitted",null]},"cursor":{"type":["string","null"],"maxLength":256},"limit":{"type":"integer","minimum":1,"maximum":100}},"required":["query","status","cursor","limit"],"additionalProperties":false},
+      "output_schema": {"type":"object","properties":{"items":{"type":"array","maxItems":100,"items":{"type":"object","properties":{"registration_id":{"type":"string","pattern":"^reg_[0-9a-f]{32}$"},"status":{"type":"string","enum":["submitted","approved","rejected"]},"guardian_display_name":{"type":"string","minLength":1,"maxLength":120},"child_display_names":{"type":"array","maxItems":8,"items":{"type":"string","maxLength":120}},"updated_at":{"type":"string","format":"date-time"}},"required":["registration_id","status","guardian_display_name","child_display_names","updated_at"],"additionalProperties":false}},"next_cursor":{"type":["string","null"],"maxLength":256}},"required":["items","next_cursor"],"additionalProperties":false}
+    },
+    {
+      "operation_id": "assign_identifier",
+      "kind": "command",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "children_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "child_id": {"type": "string", "pattern": "^child_[0-9a-f]{32}$"},
+          "opaque_identifier": {"type": "string", "minLength": 1, "maxLength": 512},
+          "expected_assignment_id": {"type": ["string", "null"], "pattern": "^assign_[0-9a-f]{32}$"}
+        },
+        "required": ["child_id", "opaque_identifier"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "assignment_id": {"type": "string"},
+          "status": {"type": "string", "enum": ["assigned"]}
+        },
+        "required": ["assignment_id", "status"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "retire_identifier",
+      "kind": "command",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "children_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "assignment_id": {"type": "string", "pattern": "^assign_[0-9a-f]{32}$"},
+          "reason": {"type": "string", "enum": ["replaced", "damaged", "lost", "manual"]}
+        },
+        "required": ["assignment_id", "reason"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {"status": {"type": "string", "enum": ["retired"]}},
+        "required": ["status"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "list_active_visits",
+      "kind": "query",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "visits_manage",
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "cursor": {"type": ["string", "null"], "maxLength": 256},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+        },
+        "required": ["cursor", "limit"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "properties": {
+                "visit_id": {"type": "string"},
+                "child_id": {"type": "string"},
+                "child_display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "entered_at": {"type": "string", "format": "date-time"},
+                "elapsed_seconds": {"type": "integer", "minimum": 0},
+                "phase": {"type": "string", "enum": ["inside", "paused", "legacy", "pending"]},
+                "last_event_at": {"type": "string", "format": "date-time"},
+                "barsy_table": {
+                  "type": ["object", "null"],
+                  "properties": {
+                    "table_slot_id": {"type": "string", "pattern": "^slot_[0-9a-f]{32}$"},
+                    "barsy_place_id": {"type": "integer", "minimum": 1},
+                    "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                    "timing_state": {"type": "string", "enum": ["prepared", "mock_confirmed", "confirmed", "retryable", "ambiguous", "manual_review"]}
+                  },
+                  "required": ["table_slot_id", "barsy_place_id", "display_name", "timing_state"],
+                  "additionalProperties": false
+                }
+              },
+              "required": ["visit_id", "child_id", "child_display_name", "entered_at", "elapsed_seconds", "last_event_at", "barsy_table"],
+              "additionalProperties": false
+            }
+          },
+          "next_cursor": {"type": ["string", "null"]}
+        },
+        "required": ["items", "next_cursor"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "list_visit_history",
+      "kind": "query",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "visits_manage",
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "maxLength": 120},
+          "date_from": {"type": ["string", "null"], "format": "date-time"},
+          "date_to": {"type": ["string", "null"], "format": "date-time"},
+          "cursor": {"type": ["string", "null"], "maxLength": 256},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+        },
+        "required": ["query", "date_from", "date_to", "cursor", "limit"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "properties": {
+                "visit_id": {"type": "string", "pattern": "^visit_[0-9a-f]{32}$"},
+                "child_id": {"type": "string", "pattern": "^child_[0-9a-f]{32}$"},
+                "child_display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "guardian_display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "entered_at": {"type": "string", "format": "date-time"},
+                "exited_at": {"type": "string", "format": "date-time"},
+                "duration_seconds": {"type": "integer", "minimum": 0},
+                "rounded_minutes": {"type": ["integer", "null"], "minimum": 0},
+                "entry_source": {"type": "string", "enum": ["identifier_event", "operator", "administrator", "internal"]},
+                "exit_source": {"type": "string", "enum": ["identifier_event", "operator", "administrator", "internal"]},
+                "barsy_table": {
+                  "type": ["object", "null"],
+                  "properties": {
+                    "table_slot_id": {"type": "string", "pattern": "^slot_[0-9a-f]{32}$"},
+                    "barsy_place_id": {"type": "integer", "minimum": 1},
+                    "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                    "timing_state": {"type": "string", "enum": ["prepared", "mock_confirmed", "confirmed", "retryable", "ambiguous", "manual_review"]}
+                  },
+                  "required": ["table_slot_id", "barsy_place_id", "display_name", "timing_state"],
+                  "additionalProperties": false
+                }
+              },
+              "required": ["visit_id", "child_id", "child_display_name", "guardian_display_name", "entered_at", "exited_at", "duration_seconds", "entry_source", "exit_source", "barsy_table"],
+              "additionalProperties": false
+            }
+          },
+          "next_cursor": {"type": ["string", "null"], "maxLength": 256}
+        },
+        "required": ["items", "next_cursor"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "get_visit",
+      "kind": "query",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "visits_manage",
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {"visit_id": {"type": "string", "pattern": "^visit_[0-9a-f]{32}$"}},
+        "required": ["visit_id"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "visit_id": {"type": "string"},
+          "child_id": {"type": "string"},
+          "child_display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+          "state": {"type": "string", "enum": ["active", "closed"]},
+          "entered_at": {"type": "string", "format": "date-time"},
+          "exited_at": {"type": ["string", "null"], "format": "date-time"},
+          "duration_seconds": {"type": ["integer", "null"], "minimum": 0},
+          "barsy_table": {
+            "type": ["object", "null"],
+            "properties": {
+              "table_slot_id": {"type": "string", "pattern": "^slot_[0-9a-f]{32}$"},
+              "barsy_place_id": {"type": "integer", "minimum": 1},
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "timing_state": {"type": "string", "enum": ["prepared", "mock_confirmed", "confirmed", "retryable", "ambiguous", "manual_review"]}
+            },
+            "required": ["table_slot_id", "barsy_place_id", "display_name", "timing_state"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["visit_id", "child_id", "child_display_name", "state", "entered_at", "exited_at", "duration_seconds", "barsy_table"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "start_visit",
+      "kind": "command",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "visits_manage",
+      "idempotency": "required",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "child_id": {"type": "string", "pattern": "^child_[0-9a-f]{32}$"},
+          "assignment_id": {"type": ["string", "null"]},
+          "occurred_at": {"type": "string", "format": "date-time"}
+        },
+        "required": ["child_id", "assignment_id", "occurred_at"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "visit_id": {"type": "string"},
+          "state": {"type": "string", "enum": ["active"]},
+          "entered_at": {"type": "string", "format": "date-time"},
+          "barsy_table": {
+            "type": ["object", "null"],
+            "properties": {
+              "table_slot_id": {"type": "string", "pattern": "^slot_[0-9a-f]{32}$"},
+              "barsy_place_id": {"type": "integer", "minimum": 1},
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "timing_state": {"type": "string", "enum": ["prepared", "mock_confirmed", "manual_review"]}
+            },
+            "required": ["table_slot_id", "barsy_place_id", "display_name", "timing_state"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["visit_id", "state", "entered_at", "barsy_table"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "close_visit",
+      "kind": "command",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "visits_manage",
+      "idempotency": "required",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "visit_id": {"type": "string", "pattern": "^visit_[0-9a-f]{32}$"},
+          "occurred_at": {"type": "string", "format": "date-time"}
+        },
+        "required": ["visit_id", "occurred_at"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "state": {"type": "string", "enum": ["closed"]},
+          "duration_seconds": {"type": "integer", "minimum": 0},
+          "rounded_minutes": {"type": ["integer", "null"], "minimum": 0},
+          "exited_at": {"type": "string", "format": "date-time"},
+          "barsy_table": {
+            "type": ["object", "null"],
+            "properties": {
+              "table_slot_id": {"type": "string", "pattern": "^slot_[0-9a-f]{32}$"},
+              "barsy_place_id": {"type": "integer", "minimum": 1},
+              "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "timing_state": {"type": "string", "enum": ["prepared", "mock_confirmed", "manual_review"]}
+            },
+            "required": ["table_slot_id", "barsy_place_id", "display_name", "timing_state"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["state", "duration_seconds", "exited_at", "barsy_table"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "process_identifier_scan",
+      "kind": "command",
+      "audiences": ["internal"],
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {"type": "string", "pattern": "^evt_[0-9a-f]{32}$"},
+          "device_id": {"type": "string", "pattern": "^dev_[0-9a-f]{32}$"},
+          "event_type": {"type": "string", "enum": ["identifier.scan.v1"]},
+          "occurred_at": {"type": "string", "format": "date-time"},
+          "payload": {
+            "type": "object",
+            "properties": {
+              "schema_version": {"type": "integer", "const": 1},
+              "capability_id": {"type": "string", "enum": ["identifier.scan.v1"]},
+              "opaque_identifier": {"type": "string", "minLength": 1, "maxLength": 512},
+              "reader_id": {"type": "string", "minLength": 1, "maxLength": 96},
+              "adapter_kind": {"type": "string", "enum": ["keyboard", "serial", "rfid_nfc", "mock"]},
+              "sequence": {"type": "integer", "minimum": 1},
+              "device_health": {"type": "string", "enum": ["ok", "degraded"]},
+              "scan_metadata": {
+                "type": "object",
+                "maxProperties": 16,
+                "propertyNames": {"minLength": 1, "maxLength": 64},
+                "additionalProperties": {"type": ["string", "number", "integer", "boolean"]}
+              }
+            },
+            "required": ["schema_version", "capability_id", "opaque_identifier", "reader_id", "adapter_kind", "sequence", "device_health", "scan_metadata"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["event_id", "device_id", "event_type", "occurred_at", "payload"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["ignored", "started", "closed", "already_active", "already_closed", "unknown_identifier", "wrong_reader_mode", "late_event", "paused", "resumed", "already_paused"]},
+          "visit_id": {"type": ["string", "null"]}
+        },
+        "required": ["status", "visit_id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "get_reader_configuration",
+      "kind": "query",
+      "audiences": ["administrator"],
+      "required_permission": "configuration_manage",
+      "idempotency": "forbidden",
+      "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": false},
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "mode": {"type": "string", "enum": ["automatic_toggle", "operator_selected", "dedicated_readers"]},
+          "device_id": {"type": "string", "pattern": "^dev_[0-9a-f]{32}$"},
+          "operator_selected_purpose": {"type": "string", "enum": ["entry", "exit"]},
+          "entry_reader_ids": {"type": "array", "maxItems": 16, "uniqueItems": true, "items": {"type": "string"}},
+          "exit_reader_ids": {"type": "array", "maxItems": 16, "uniqueItems": true, "items": {"type": "string"}},
+          "effective_from": {"type": "string", "format": "date-time"}
+        },
+        "required": ["mode", "device_id", "operator_selected_purpose", "entry_reader_ids", "exit_reader_ids", "effective_from"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "update_reader_configuration",
+      "kind": "command",
+      "audiences": ["administrator"],
+      "required_permission": "configuration_manage",
+      "idempotency": "required",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "mode": {"type": "string", "enum": ["automatic_toggle", "operator_selected", "dedicated_readers"]},
+          "operator_selected_purpose": {"type": "string", "enum": ["entry", "exit"]},
+          "entry_reader_ids": {"type": "array", "maxItems": 16, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 96}},
+          "exit_reader_ids": {"type": "array", "maxItems": 16, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 96}}
+        },
+        "required": ["mode", "operator_selected_purpose", "entry_reader_ids", "exit_reader_ids"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {"status": {"type": "string", "enum": ["updated"]}},
+        "required": ["status"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "list_identifier_scan_activity",
+      "kind": "query",
+      "audiences": ["administrator"],
+      "required_permission": "configuration_manage",
+      "idempotency": "forbidden",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+        },
+        "required": ["limit"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "properties": {
+                "event_id": {"type": "string", "pattern": "^evt_[0-9a-f]{32}$"},
+                "reader_id": {"type": "string", "minLength": 1, "maxLength": 96},
+                "adapter_kind": {"type": "string", "enum": ["keyboard", "serial", "rfid_nfc", "mock"]},
+                "device_health": {"type": "string", "enum": ["ok", "degraded"]},
+                "status": {"type": "string", "enum": ["ignored", "started", "closed", "already_active", "already_closed", "unknown_identifier", "wrong_reader_mode", "late_event", "paused", "resumed", "already_paused"]},
+                "child_id": {"type": ["string", "null"], "pattern": "^child_[0-9a-f]{32}$"},
+                "child_display_name": {"type": ["string", "null"], "minLength": 1, "maxLength": 120},
+                "visit_id": {"type": ["string", "null"], "pattern": "^visit_[0-9a-f]{32}$"},
+                "occurred_at": {"type": "string", "format": "date-time"},
+                "processed_at": {"type": "string", "format": "date-time"}
+              },
+              "required": ["event_id", "reader_id", "adapter_kind", "device_health", "status", "child_id", "child_display_name", "visit_id", "occurred_at", "processed_at"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["items"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "get_operator_reader_state",
+      "kind": "query",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "visits_manage",
+      "idempotency": "forbidden",
+      "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": false},
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "mode": {"type": "string", "enum": ["automatic_toggle", "operator_selected", "dedicated_readers"]},
+          "operator_selected_purpose": {"type": "string", "enum": ["entry", "exit"]},
+          "effective_from": {"type": "string", "format": "date-time"}
+        },
+        "required": ["mode", "operator_selected_purpose", "effective_from"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "set_operator_reader_purpose",
+      "kind": "command",
+      "audiences": ["operator", "administrator"],
+      "required_permission": "visits_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {"purpose": {"type": "string", "enum": ["entry", "exit"]}},
+        "required": ["purpose"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["updated"]},
+          "purpose": {"type": "string", "enum": ["entry", "exit"]}
+        },
+        "required": ["status", "purpose"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "list_barsy_table_pool",
+      "kind": "query",
+      "audiences": ["administrator"],
+      "required_permission": "configuration_manage",
+      "idempotency": "forbidden",
+      "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": false},
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "type": "object",
+              "properties": {
+                "table_slot_id": {"type": "string", "pattern": "^slot_[0-9a-f]{32}$"},
+                "barsy_place_id": {"type": "integer", "minimum": 1},
+                "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "priority": {"type": "integer", "minimum": 0, "maximum": 10000},
+                "enabled": {"type": "boolean"},
+                "availability": {"type": "string", "enum": ["free", "allocated", "disabled"]}
+              },
+              "required": ["table_slot_id", "barsy_place_id", "display_name", "priority", "enabled", "availability"],
+              "additionalProperties": false
+            }
+          },
+          "configured": {"type": "integer", "minimum": 0, "maximum": 256},
+          "enabled": {"type": "integer", "minimum": 0, "maximum": 256},
+          "free": {"type": "integer", "minimum": 0, "maximum": 256},
+          "allocated": {"type": "integer", "minimum": 0, "maximum": 256},
+          "delivery_mode": {"type": "string", "enum": ["mock", "live_start"]}
+        },
+        "required": ["items", "configured", "enabled", "free", "allocated", "delivery_mode"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "discover_barsy_places",
+      "kind": "query",
+      "audiences": ["administrator"],
+      "required_permission": "configuration_manage",
+      "idempotency": "forbidden",
+      "audit": "metadata",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "limit": {"type": "integer", "minimum": 1, "maximum": 256}
+        },
+        "required": ["limit"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["available", "retryable", "rejected", "unavailable", "invalid_response"]},
+          "items": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "type": "object",
+              "properties": {
+                "barsy_place_id": {"type": "integer", "minimum": 1},
+                "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "salon_name": {"type": "string", "maxLength": 120},
+                "type_name": {"type": "string", "maxLength": 120},
+                "accounts_count": {"type": ["integer", "null"], "minimum": 0},
+                "mapped_table_slot_id": {"type": ["string", "null"], "pattern": "^slot_[0-9a-f]{32}$"}
+              },
+              "required": ["barsy_place_id", "display_name", "salon_name", "type_name", "accounts_count", "mapped_table_slot_id"],
+              "additionalProperties": false
+            }
+          },
+          "truncated": {"type": "boolean"},
+          "http_status": {"type": ["integer", "null"], "minimum": 100, "maximum": 599},
+          "error_category": {"type": ["string", "null"], "maxLength": 64}
+        },
+        "required": ["status", "items", "truncated", "http_status", "error_category"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "get_barsy_integration_status",
+      "kind": "query",
+      "audiences": ["administrator"],
+      "required_permission": "configuration_manage",
+      "idempotency": "forbidden",
+      "audit": "metadata",
+      "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": false},
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "delivery_mode": {"type": "string", "enum": ["mock", "live_start"]},
+          "production_mutations_enabled": {"type": "boolean"},
+          "commands": {"type":"array","maxItems":50,"items":{"type":"object","properties":{"command_id":{"type":"string","pattern":"^barsy_command_[0-9a-f]{32}$"},"visit_id":{"type":"string","pattern":"^visit_[0-9a-f]{32}$"},"state":{"type":"string","enum":["prepared","retryable","ambiguous","manual_review","confirmed"]},"remote_account_id":{"type":["string","null"],"maxLength":32},"error_code":{"type":["string","null"],"maxLength":64},"barsy_place_id":{"type":"integer","minimum":1},"binding_state":{"type":"string","enum":["allocated","released"]}},"required":["command_id","visit_id","state","remote_account_id","error_code","barsy_place_id","binding_state"],"additionalProperties":false}},
+          "stop_contract_status": {"type": "string", "enum": ["unverified"]},
+          "start_commands": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+          "stop_commands": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+          "mock_confirmed": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+          "retryable": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+          "ambiguous": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+          "manual_review": {"type": "integer", "minimum": 0, "maximum": 2147483647}
+        },
+        "required": ["commands", "delivery_mode", "production_mutations_enabled", "stop_contract_status", "start_commands", "stop_commands", "mock_confirmed", "retryable", "ambiguous", "manual_review"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "save_barsy_table_mapping",
+      "kind": "command",
+      "audiences": ["administrator"],
+      "required_permission": "configuration_manage",
+      "idempotency": "required",
+      "audit": "metadata",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "table_slot_id": {"type": ["string", "null"], "pattern": "^slot_[0-9a-f]{32}$"},
+          "barsy_place_id": {"type": "integer", "minimum": 1},
+          "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+          "priority": {"type": "integer", "minimum": 0, "maximum": 10000},
+          "enabled": {"type": "boolean"}
+        },
+        "required": ["table_slot_id", "barsy_place_id", "display_name", "priority", "enabled"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "table_slot_id": {"type": "string", "pattern": "^slot_[0-9a-f]{32}$"},
+          "status": {"type": "string", "enum": ["created", "updated"]}
+        },
+        "required": ["table_slot_id", "status"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "set_barsy_table_mapping_enabled",
+      "kind": "command",
+      "audiences": ["administrator"],
+      "required_permission": "configuration_manage",
+      "idempotency": "required",
+      "audit": "metadata",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "table_slot_id": {"type": "string", "pattern": "^slot_[0-9a-f]{32}$"},
+          "enabled": {"type": "boolean"}
+        },
+        "required": ["table_slot_id", "enabled"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["updated"]},
+          "enabled": {"type": "boolean"}
+        },
+        "required": ["status", "enabled"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "apply_retention",
+      "kind": "job",
+      "audiences": ["internal"],
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": false},
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "anonymized": {"type": "integer", "minimum": 0},
+          "identifiers_erased": {"type": "integer", "minimum": 0},
+          "deleted": {"type": "integer", "minimum": 0}
+        },
+        "required": ["anonymized", "identifiers_erased", "deleted"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "export_personal_data",
+      "kind": "command",
+      "audiences": ["administrator"],
+      "required_permission": "privacy_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "subject_kind": {"type": "string", "enum": ["guardian", "child"]},
+          "subject_id": {"type": "string", "minLength": 1, "maxLength": 64}
+        },
+        "required": ["subject_kind", "subject_id"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "export_id": {"type": "string", "pattern": "^export_[0-9a-f]{32}$"},
+          "status": {"type": "string", "enum": ["ready"]},
+          "document_json": {"type": "string", "maxLength": 1048576}
+        },
+        "required": ["export_id", "status", "document_json"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "operation_id": "erase_personal_data",
+      "kind": "command",
+      "audiences": ["administrator"],
+      "required_permission": "privacy_manage",
+      "idempotency": "required",
+      "audit": "redacted",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "subject_kind": {"type": "string", "enum": ["guardian", "child"]},
+          "subject_id": {"type": "string", "minLength": 1, "maxLength": 64},
+          "scope": {"type": "string", "enum": ["anonymize", "erase_where_permitted"]},
+          "reason": {"type": "string", "minLength": 1, "maxLength": 240}
+        },
+        "required": ["subject_kind", "subject_id", "scope", "reason"],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["anonymized", "erased"]},
+          "affected_records": {"type": "integer", "minimum": 0}
+        },
+        "required": ["status", "affected_records"],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "routes": [
+    {
+      "route_id": "cashier_desk",
+      "entrypoint_id": "cashier_desk",
+      "audience": "operator",
+      "required_permissions": ["payments_manage"],
+      "layout": "application",
+      "navigation": false,
+      "order": 36
+    },
+    {
+      "route_id": "tablet_registration",
+      "entrypoint_id": "tablet_registration",
+      "audience": "public",
+      "layout": "application",
+      "navigation": false,
+      "order": 10
+    },
+    {
+      "route_id": "kiosk_registration",
+      "entrypoint_id": "kiosk_registration",
+      "audience": "kiosk",
+      "layout": "kiosk",
+      "navigation": false,
+      "order": 11
+    },
+    {
+      "route_id": "operator_desk",
+      "entrypoint_id": "operator_desk",
+      "audience": "operator",
+      "required_permissions": ["registrations_manage"],
+      "layout": "application",
+      "navigation": false,
+      "order": 20
+    },
+    {
+      "route_id": "active_visits",
+      "entrypoint_id": "active_visits",
+      "audience": "operator",
+      "required_permissions": ["visits_manage"],
+      "layout": "application",
+      "navigation": false,
+      "order": 30
+    },
+    {
+      "route_id": "visit_history",
+      "entrypoint_id": "visit_history",
+      "audience": "operator",
+      "required_permissions": ["visits_manage"],
+      "layout": "application",
+      "navigation": false,
+      "order": 35
+    },
+    {
+      "route_id": "administration",
+      "entrypoint_id": "administration",
+      "audience": "administrator",
+      "required_permissions": ["configuration_manage", "privacy_manage"],
+      "layout": "application",
+      "navigation": false,
+      "order": 40
+    }
+  ],
+  "event_subscriptions": [
+    {
+      "subscription_id": "identifier_scans",
+      "event_type": "identifier.scan.v1",
+      "capability_id": "identifier.scan.v1",
+      "handler_operation_id": "process_identifier_scan",
+      "device_scope_config_key": "READER_DEVICE_ID",
+      "acknowledgement": "after_commit",
+      "max_backlog": 5000
+    }
+  ],
+  "connectors": [
+    {
+      "connector_id": "barsy_api",
+      "destination_config_key": "BARSY_API_URL",
+      "allowed_schemes": ["http", "https"],
+      "path_prefix": "/",
+      "authentication": "basic",
+      "credential_ref_config_key": "BARSY_API_CREDENTIAL",
+      "supports_mutations": true,
+      "timeout_seconds": 10,
+      "max_request_bytes": 262144,
+      "max_response_bytes": 1048576
+    }
+  ],
+  "jobs": [
+    {"job_id": "deliver_barsy_commands", "handler_operation_id": "deliver_barsy_commands", "interval_seconds": 5, "catch_up": "once", "singleton": true},
+    {
+      "job_id": "apply_retention",
+      "handler_operation_id": "apply_retention",
+      "interval_seconds": 86400,
+      "catch_up": "once",
+      "singleton": true
+    }
+  ],
+  "storage": {
+    "engine": "sqlite",
+    "schema_revision": "0015",
+    "migration_entrypoint": "child_center_application.migrations:get_migrations",
+    "classifications": ["private", "secret"],
+    "contains_personal_data": true,
+    "retention_operation_id": "apply_retention",
+    "export_operation_id": "export_personal_data",
+    "erasure_operation_id": "erase_personal_data",
+    "backup_required": true
+  },
+  "lifecycle": {
+    "disable_preserves_data": true,
+    "uninstall_requires_data_confirmation": true,
+    "rollback": "transactional"
+  }
+}
