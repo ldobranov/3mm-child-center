@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build and publish Child Center
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Validate release version
+        id: release
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -Eeuo pipefail
+
+          VERSION="${TAG#v}"
+
+          BUILDER_VERSION="$(
+            python -c "from build_child_center_package import PACKAGE_VERSION; print(PACKAGE_VERSION)"
+          )"
+
+          if [ "$VERSION" != "$BUILDER_VERSION" ]; then
+            echo "Tag version $VERSION does not match builder version $BUILDER_VERSION"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build install package twice
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -Eeuo pipefail
+
+          mkdir -p "$RUNNER_TEMP/build-a"
+          mkdir -p "$RUNNER_TEMP/build-b"
+          mkdir -p dist
+
+          python build_child_center_package.py \
+            --output "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip"
+
+          python build_child_center_package.py \
+            --output "$RUNNER_TEMP/build-b/3mm-child-center-$VERSION.zip"
+
+          cmp \
+            "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip" \
+            "$RUNNER_TEMP/build-b/3mm-child-center-$VERSION.zip"
+
+          cp \
+            "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip" \
+            "dist/3mm-child-center-$VERSION.zip"
+
+      - name: Create checksum
+        working-directory: dist
+        run: sha256sum ./*.zip > SHA256SUMS
+
+      - name: Show package contents
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          python -m zipfile -l "dist/3mm-child-center-$VERSION.zip"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -Eeuo pipefail
+
+          NOTES_FILE="RELEASE_NOTES_$VERSION.md"
+
+          if [ -f "$NOTES_FILE" ]; then
+            gh release create "$TAG" \
+              "dist/3mm-child-center-$VERSION.zip" \
+              "dist/SHA256SUMS" \
+              --verify-tag \
+              --title "Child Center $VERSION" \
+              --notes-file "$NOTES_FILE"
+          else
+            gh release create "$TAG" \
+              "dist/3mm-child-center-$VERSION.zip" \
+              "dist/SHA256SUMS" \
+              --verify-tag \
+              --title "Child Center $VERSION" \
+              --generate-notes
+          fi
