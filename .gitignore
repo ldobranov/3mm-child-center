@@ -6,3 +6,5 @@ venv/
 dist/
 build/
 *.egg-info/
+.runtime/
+node_modules/

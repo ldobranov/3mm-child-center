@@ -1,0 +1,42 @@
+{
+  "contract_version": 1,
+  "acceptance_profile": "native_sqlite_interactive_commerce_events_v1",
+  "builder": "build_local_package.py",
+  "source_inputs": [
+    "app-development.json",
+    "build_local_package.py",
+    "local_contract.py",
+    "service/child_center_local",
+    "source/frontend/local",
+    "tests",
+    "tools",
+    "templates",
+    "docs/child-center-map.json"
+  ],
+  "python_tests": [
+    "tests/test_local_profile.py",
+    "tests/test_local_activation.py",
+    "tests/test_local_barsy.py",
+    "tests/test_local_readers.py",
+    "tests/test_local_kiosk.py",
+    "tests/test_local_commerce.py",
+    "tests/test_local_families.py",
+    "tests/test_authoring_tools.py"
+  ],
+  "frontend_check": "tools/check_local_frontend.mjs",
+  "frontend_tests": [
+    "tests/local-ui.test.ts"
+  ],
+  "platform_blockers": [],
+  "manual_acceptance": [
+    "Core light/dark theme",
+    "Core initial locale and live locale switch",
+    "phone layout",
+    "installed native UI approval and actual staff/kiosk permissions",
+    "Core rollout, clean kiosk code pairing, renewal/revocation and real network reader scans",
+    "Raspberry/systemd/ARM startup and recovery"
+  ],
+  "frontend_inputs": [
+    "source/frontend/local"
+  ]
+}

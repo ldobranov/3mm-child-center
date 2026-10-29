@@ -1,0 +1,32 @@
+{
+  "contract_version": 1,
+  "builder": "build_application.py",
+  "source_inputs": [
+    "application.json",
+    "application_contract.py",
+    "app-development.json",
+    "build_application.py",
+    "service",
+    "source",
+    "tests",
+    "tools"
+  ],
+  "python_tests": [
+    "tests/test_application.py"
+  ],
+  "frontend_check": "tools/check_local_frontend.mjs",
+  "frontend_tests": [
+    "tests/application-ui.test.ts"
+  ],
+  "frontend_inputs": [
+    "source/frontend"
+  ],
+  "platform_blockers": [],
+  "manual_acceptance": [
+    "Core light/dark theme and appearance variants",
+    "phone layout",
+    "Core initial/live locale binding",
+    "installed native UI consent and operator read/write/revocation",
+    "target ARM/systemd activation and rollback"
+  ]
+}

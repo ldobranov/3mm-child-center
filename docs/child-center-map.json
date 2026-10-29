@@ -1,0 +1,332 @@
+{
+  "map_version": 1,
+  "baseline": "15349d0; historical 0.7.6 builder + latest release notes override earlier plans",
+  "meaning": "local_checked is not installed/product acceptance",
+  "owner_verified": {
+    "version": "0.7.8",
+    "device": "Raspberry",
+    "scope": [
+      "application works",
+      "Barsy connection and directory reads"
+    ]
+  },
+  "features": [
+    {
+      "id": "CC01",
+      "name": "Регистрация на родител и деца",
+      "status": "local_checked",
+      "original": [
+        "service/child_center_application/service.py",
+        "docs/CHILD_CENTER_CC0_DECISIONS.md"
+      ],
+      "current": [
+        "service/child_center_local/service.py",
+        "tests/test_local_profile.py"
+      ],
+      "gap": "Регистрация и корекции, отделен избор на разрешени артикули за всяко дете; старите регистрации запазват празен разрешителен списък. Реално приемане предстои.",
+      "acceptance": "Един родител, няколко деца; корекция и повторна заявка без дубликат."
+    },
+    {
+      "id": "CC02",
+      "name": "Таблет: свързване, подновяване, отнемане и fullscreen",
+      "status": "local_checked",
+      "original": [
+        "source/frontend/kiosk-session.ts",
+        "source/frontend/KioskRegistration.vue"
+      ],
+      "current": [
+        "source/frontend/local/Registration.vue",
+        "tests/test_local_kiosk.py",
+        "docs/CORE_KIOSK_AND_READER_CONTRACT.md"
+      ],
+      "gap": "Core-owned свързване с код, възстановяване, подновяване и отнемане са интеграционно проверени с точния Child Center ZIP и подписан native host. Резултатите са изолирани по терминал. Нужно е внедряване на новия Core и реално приемане от чист браузър; старите kiosk терминали изискват ново свързване.",
+      "acceptance": "Чист таблет се свързва с еднократен код; отнет терминал не изпраща данни."
+    },
+    {
+      "id": "CC03",
+      "name": "Клиенти: търсене, редакция и одобрение",
+      "status": "local_checked",
+      "original": [
+        "source/frontend/OperatorDesk.vue",
+        "service/child_center_application/service.py"
+      ],
+      "current": [
+        "source/frontend/local/Desk.vue",
+        "source/frontend/local/Administration.vue",
+        "service/child_center_local/administration.py",
+        "tests/test_local_profile.py"
+      ],
+      "gap": "Локално проверени търсене, одобрение и административни CAS корекции със запазено съгласие/връзки. Инсталираното приемане на новата администрация предстои.",
+      "acceptance": "Търсене на кирилица; корекции без загуба на съгласие/връзки/журнал."
+    },
+    {
+      "id": "CC04",
+      "name": "Гривни: задаване, замяна и откачане",
+      "status": "local_checked",
+      "original": [
+        "service/child_center_application/service.py"
+      ],
+      "current": [
+        "service/child_center_local/service.py",
+        "tests/test_local_profile.py"
+      ],
+      "gap": "Локален CAS и уникалност; няма доказано устройство/операторско приемане.",
+      "acceptance": "Една активна гривна; стара форма не заменя ново присвояване."
+    },
+    {
+      "id": "CC05",
+      "name": "Събития от четци и режими вход/изход",
+      "status": "local_checked",
+      "original": [
+        "service/child_center_application/service.py",
+        "source/frontend/ScanOutcomes.vue"
+      ],
+      "current": [
+        "source/frontend/local/Readers.vue",
+        "service/child_center_local/readers.py",
+        "tests/test_local_readers.py",
+        "docs/CORE_KIOSK_AND_READER_CONTRACT.md"
+      ],
+      "gap": "Собственикът потвърди успешен mock reader тест. Автоматичните broker/dedup/revoke проверки са запазени. Това не доказва физически модел четец или преминаване през врата.",
+      "acceptance": "Дублиран/закъснял event не обръща посещение; device/reader scope се спазва."
+    },
+    {
+      "id": "CC06",
+      "name": "Локален престой, пауза, продължаване, приключване",
+      "status": "local_checked",
+      "original": [
+        "service/child_center_application/service.py"
+      ],
+      "current": [
+        "service/child_center_local/service.py",
+        "tests/test_local_profile.py"
+      ],
+      "gap": "Проверени са ръчният и identifier.scan.v1 поток. Реален мрежов четец и access-confirmed прием още не са приети.",
+      "acceptance": "12:20 + пауза + 17:50 = 30:10 и 31 закръглени минути; без цени."
+    },
+    {
+      "id": "CC07",
+      "name": "История, филтри и времева зона",
+      "status": "local_checked",
+      "original": [
+        "source/frontend/VisitHistory.vue"
+      ],
+      "current": [
+        "source/frontend/local/Desk.vue"
+      ],
+      "gap": "Има търсене по родител/дете, граници по Софийски календарни дни, часово отместване при DST и подробни събития с пагинация. Старите престои са обозначени като непълни snapshot-и; новият поток още чака приемане на устройство.",
+      "acceptance": "Търсене по име/период и UTC -> Europe/Sofia, включително DST."
+    },
+    {
+      "id": "CC08",
+      "name": "Barsy: connector, credentials и откриване на каталог",
+      "status": "local_checked",
+      "original": [
+        "source/frontend/application-api.ts",
+        "source/frontend/BarsyDirectory.vue"
+      ],
+      "current": [
+        "local_contract.py",
+        "service/child_center_local/barsy.py",
+        "source/frontend/local/Barsy.vue",
+        "tests/test_local_barsy.py"
+      ],
+      "gap": "Реално четене е потвърдено на 0.7.8. Новият интерактивен търговски профил изисква ново изрично native/UI/connector approval и отделна реална проба.",
+      "acceptance": "Настройка без secrets в UI/лог; каталог и отказ при отнет connector grant."
+    },
+    {
+      "id": "CC09",
+      "name": "Родители, маси и отваряне на сметки",
+      "status": "local_checked",
+      "original": [
+        "service/child_center_application/commerce.py",
+        "service/child_center_application/service.py"
+      ],
+      "current": [
+        "service/child_center_local/commerce.py",
+        "service/child_center_local/migrations.py",
+        "source/frontend/local/Commerce.vue",
+        "source/frontend/local/Cashier.vue",
+        "tests/test_local_commerce.py",
+        "tests/local-ui.test.ts"
+      ],
+      "gap": "Обща семейна сметка, отделни сметки на едно място и автоматично отваряне след вход в native приложението; local_0006 пази старите сметки. Реален търговски прием предстои.",
+      "acceptance": "Локален прием и сметка се свързват; загубен POST отговор не изпраща втори POST."
+    },
+    {
+      "id": "CC10",
+      "name": "Единици време, артикули и консумация",
+      "status": "local_checked",
+      "original": [
+        "service/child_center_application/billing_units.py",
+        "source/frontend/ConsumptionChoices.vue",
+        "RELEASE_NOTES_0.7.5.md"
+      ],
+      "current": [
+        "service/child_center_local/commerce.py",
+        "service/child_center_local/migrations.py",
+        "source/frontend/local/Commerce.vue",
+        "source/frontend/local/Cashier.vue",
+        "tests/test_local_commerce.py",
+        "tests/local-ui.test.ts"
+      ],
+      "gap": "Времето на децата се закръгля отделно и сумира към семейната сметка; детските разрешения са отделни, родителят избира от Barsy категория с подкатегориите. Цените идват от Barsy; реалният каталог още чака приемане.",
+      "acceptance": "Измерено време отделно от количество; известен резултат се сверява без повторна продажба."
+    },
+    {
+      "id": "CC11",
+      "name": "Плащане и отделен касиер",
+      "status": "local_checked",
+      "original": [
+        "service/child_center_application/commerce.py",
+        "source/frontend/StaffCashier.vue",
+        "RELEASE_NOTES_0.7.6.md"
+      ],
+      "current": [
+        "service/child_center_local/commerce.py",
+        "service/child_center_local/migrations.py",
+        "source/frontend/local/Commerce.vue",
+        "source/frontend/local/Cashier.vue",
+        "tests/test_local_commerce.py",
+        "tests/local-ui.test.ts"
+      ],
+      "gap": "Целият поток е в съществуващата каса с отделни commerce/visits/payments права, актуална actor-scoped сума и еднократен Accounts_close с проверка. Реалната конфигурация на касовото устройство още чака приемане.",
+      "acceptance": "Едно потвърждение на получено плащане; касиер без права за престои."
+    },
+    {
+      "id": "CC12",
+      "name": "Неясни търговски резултати и външно приключване",
+      "status": "local_checked",
+      "original": [
+        "service/child_center_application/account_observation.py",
+        "service/child_center_application/reliable_runtime.py",
+        "RELEASE_NOTES_0.7.2.md",
+        "RELEASE_NOTES_0.7.5.md"
+      ],
+      "current": [
+        "service/child_center_local/commerce.py",
+        "service/child_center_local/migrations.py",
+        "source/frontend/local/Commerce.vue",
+        "source/frontend/local/Cashier.vue",
+        "tests/test_local_commerce.py",
+        "tests/local-ui.test.ts"
+      ],
+      "gap": "Устойчив журнал преди POST, без повторно изпращане при timeout/срив; изрична проверка по identity/количества и ръчно прегледано външно приключване. Без автоматична фонова доставка.",
+      "acceptance": "POST success + lost reply, ръчно приключена сметка, липсващи редове и без автоматичен replay."
+    },
+    {
+      "id": "CC13",
+      "name": "Периодична доставка, проверка и retention",
+      "status": "platform_gap",
+      "original": [
+        "service/child_center_application/workflow_runtime.py",
+        "INCIDENT_2026_09_23_JOB_TIMEOUT.md"
+      ],
+      "current": [],
+      "gap": "Старите jobs са отказани. Текущите bounded tasks не композират connectors/events. Нужен е общ договор; не връщаме jobs.",
+      "acceptance": "Ограничени устойчиви стъпки, вътрешен budget преди външния timeout, справедливо обслужване без повторен ефект."
+    },
+    {
+      "id": "CC14",
+      "name": "Точка за достъп и потвърдено преминаване",
+      "status": "platform_gap",
+      "original": [
+        "service/child_center_application/access_control.py",
+        "service/child_center_application/access_points.py",
+        "ACCESS_POINT_STAGE3.md"
+      ],
+      "current": [],
+      "gap": "Текущият scoped command source отказва sensor-bound договор. Команда != преминал човек.",
+      "acceptance": "Отчет след съответстващ sensor event; неясно физическо действие остава за проверка."
+    },
+    {
+      "id": "CC15",
+      "name": "Права, маршрути и видимост",
+      "status": "partial",
+      "original": [
+        "STAFF_ACCESS_CORE_HANDOFF.md",
+        "source/frontend/StaffAccessGate.vue"
+      ],
+      "current": [
+        "local_contract.py",
+        "tests/test_local_activation.py"
+      ],
+      "gap": "Локално проверени отделни commerce/payments права, текущ subject, публични маршрути и Core connector revoke. Инсталираната матрица оператор/kiosk/касиер изисква приемане.",
+      "acceptance": "Служители с отделни права; revoke/disable/смяна на пакет спира следващата заявка."
+    },
+    {
+      "id": "CC16",
+      "name": "Лични данни: export, erasure, retention",
+      "status": "partial",
+      "original": [
+        "service/child_center_application/privacy.py",
+        "PRIVACY_IMPLEMENTATION.md"
+      ],
+      "current": [
+        "service/child_center_local/service.py",
+        "source/frontend/local/Privacy.vue"
+      ],
+      "gap": "Export включва разрешения и търговски журнал; неприключена сметка блокира erasure. Автоматичен retention и legacy import са отделен обхват.",
+      "acceptance": "Пълен subject export или явен отказ; активен престой блокира erasure; без PII в receipts/логове."
+    },
+    {
+      "id": "CC17",
+      "name": "Миграция на 0020 и връщане назад",
+      "status": "not_ported",
+      "original": [
+        "service/child_center_application/reliable_runtime.py"
+      ],
+      "current": [
+        "service/child_center_local/migrations.py",
+        "tests/test_local_activation.py"
+      ],
+      "gap": "local_0001 отказва legacy база. Това не е пренос на старите данни.",
+      "acceptance": "Проверен import с бройки/идентичности и без финансов/физически replay; snapshot rollback."
+    },
+    {
+      "id": "CC18",
+      "name": "Теми и публични UI компоненти",
+      "status": "local_checked",
+      "original": [
+        "source/frontend/OperatorDesk.vue"
+      ],
+      "current": [
+        "source/frontend/local/local.css",
+        "source/frontend/local/Desk.vue",
+        "source/frontend/local/ClientForm.vue",
+        "tests/local-ui.test.ts"
+      ],
+      "gap": "Пренесени са публичните UiSurface/UiButton/UiField, --ui-* токени и Core appearance context. Няма собствена тема; инсталираните light/dark и настройки още чакат визуално приемане.",
+      "acceptance": "Общите UiSurface/UiField/UiButton и --ui-*; светло/тъмно и телефон."
+    },
+    {
+      "id": "CC19",
+      "name": "Език от Core и преводи на приложението",
+      "status": "local_checked",
+      "original": [
+        "source/frontend/language.ts"
+      ],
+      "current": [
+        "source/frontend/local/i18n.ts",
+        "source/frontend/local/locale.ts",
+        "source/frontend/local/locales/en.json",
+        "source/frontend/local/locales/bg.json"
+      ],
+      "gap": "Свързан е публичният host.presentation v1 за начален/текущ език с unsubscribe; Core loader подава и реактивен locale prop. EN fallback и BG референцията са проверени без загуба на формата. Инсталираното приемане предстои.",
+      "acceptance": "Без втори езиков selector; началният и смененият Core език управляват текста без загуба на формата."
+    },
+    {
+      "id": "CC20",
+      "name": "Разделение на общи възможности и бизнес правила",
+      "status": "constraint",
+      "original": [
+        "ARCHITECTURE_ROADMAP.md"
+      ],
+      "current": [
+        "local_contract.py"
+      ],
+      "gap": "Core/Agent не познават деца, Barsy, тарифи или конкретни модели хардуер. Делегиран управител/нови устройства не стават автоматична задача.",
+      "acceptance": "Нов съвместим драйвер/приложение не изисква специален Core branch."
+    }
+  ]
+}

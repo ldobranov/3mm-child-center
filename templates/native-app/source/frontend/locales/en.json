@@ -1,0 +1,8 @@
+{
+  "title": "Example application",
+  "value": "Value",
+  "add": "Add one",
+  "check": "Check saved outcome",
+  "unknown": "Outcome needs review",
+  "unavailable": "Unavailable"
+}
