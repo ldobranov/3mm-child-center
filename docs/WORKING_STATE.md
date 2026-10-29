@@ -2,6 +2,57 @@
 
 Updated: 2026-10-29. Imported baseline: `15349d0`.
 
+## Authorized commit, push and release 0.7.22, 2026-10-29
+
+Owner explicitly authorized commit, push and release after reviewing the local
+documentation follow-up. Scope is the eleven documentation/workflow files on
+existing main, followed by tag v0.7.22 and publication of the verified draft.
+Application/package inputs remain unchanged from 0cab723. No Core edit, version
+bump, device deployment, reset, branch creation or history rewrite is included.
+
+Preflight: origin/main is 0cab723ac3f6b8f7086c5afa4979e468d000d658;
+remote v0.7.22 tag/release do not yet exist. Reuse the application and release
+checks below for unchanged inputs. Before committing review the exact staged
+diff, rebuild from the index and require the immutable approved package hash.
+Then push main/tag normally, wait for the tag workflow, verify its draft assets
+against the delivered ZIP/checksum and publish that existing draft. Final remote
+commit/tag/workflow/release evidence belongs in ignored
+.runtime/release-publish-0.7.22/ and in the user handoff.
+
+## Current documentation and release preparation, 2026-10-29
+
+Requested application commit 0cab723ac3f6b8f7086c5afa4979e468d000d658 is
+pushed to origin/main. The owner then asked whether documentation, Core
+requirements and release preparation were complete. Audit found missing current
+compatibility/operator/release docs and a tag workflow still using the legacy
+builder. That gap is now corrected locally; this follow-up has no new commit,
+push, tag, GitHub release, device deployment or Core edit.
+
+Current references: CORE_REQUIREMENTS.md records SDK 1.3 / manifest v2 / public
+UI contracts and the tested development baseline, without inventing a minimum
+published Core semver. OPERATIONS.md covers setup, permissions, family workflow,
+debug and guarded recovery. RELEASING.md and RELEASE_NOTES_0.7.22.md define the
+immutable artifact, acceptance limits and publishing procedure. Historical Core
+handoff documents are labelled and point to the current requirements.
+
+The tag workflow now uses build_local_package.py, pinned official actions and
+Python 3.14.4. It reproduces the ZIP twice, validates declarations/wheel digest
+and the approved release-notes checksum, then prepares a draft release. Actual
+publication and missing hardware acceptance remain separate; packaging does not
+claim the integration/device gates passed.
+
+New local verification: .runtime/release-docs-check/50f590ed/report.json. YAML
+parse and all shell syntax passed; executed packaging steps reproduced the
+immutable 95295-byte 0.7.22 artifact, SHA-256
+abd17c52b9c537a733a9f6264dcb315500837453196cc6ceeffdf0ac71f3f5f3.
+Wrong tag, absent notes, incorrect SDK, altered wheel and differing approved
+checksum were refused; restored valid input passed. The gh command was checked
+for syntax only and never executed. Relative document links and final whitespace
+were checked. Prior 192 Python / 111 UI plus six targeted cases remain evidence
+for unchanged application content; no runtime/UI rebuild is claimed for these
+documentation/workflow-only edits. Core system timezone and physical-device
+acceptance remain open and are documented explicitly.
+
 ## Functional handoff and requested commit, 2026-10-29
 
 Owner reports the application now performs its intended main workflow and asks
@@ -26,9 +77,9 @@ AF_UNIX activation-restart checks in
 artifact bytes before staging. README/working-state edits require only diff and
 whitespace/link review. No old run is relabelled as a fresh runtime test.
 
-Unrelated publishing finding: the existing tag workflow still invokes the
-historical build_child_center_package.py. It is not changed in this commit task;
-resolve its current-builder/release gates before a separately requested tag.
+Historical publishing finding at that commit: the tag workflow still invoked
+build_child_center_package.py. The documentation follow-up above replaces it;
+its new workflow/docs remain local pending separately requested commit/push/tag.
 
 ## Current delivery: 0.7.22, visible debug setting and quiet progress, 2026-10-29
 

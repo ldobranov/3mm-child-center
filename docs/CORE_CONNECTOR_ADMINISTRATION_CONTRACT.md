@@ -1,5 +1,9 @@
 # Public connector administration contract — proposal, not an implemented API
 
+For the current 0.7.22 compatibility and connector requirements see
+[CORE_REQUIREMENTS.md](CORE_REQUIREMENTS.md). The proposal below is retained
+for historical context; it is not a new Core implementation request.
+
 **Current integration status:** Core implemented a Core-owned settings gear in
 Extensions instead of the proposed in-application facade. This satisfies the
 chosen no-workaround setup path. The facade below remains historical proposal

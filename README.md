@@ -34,10 +34,17 @@ Run the local checks with `tools/Check-Application.ps1` in the configured Window
 workspace, or follow [APPLICATION_DEVELOPMENT.md](docs/APPLICATION_DEVELOPMENT.md).
 See [WORKING_STATE.md](docs/WORKING_STATE.md) for exact check/artifact evidence and
 remaining device acceptance. Generated ZIPs and runtime/check outputs are ignored.
-The tag-publishing workflow still uses the historical builder; review it before
-requesting a tag or GitHub release.
+Current documentation:
 
-## Development entry points
+- [Core requirements and compatibility](docs/CORE_REQUIREMENTS.md)
+- [Installation, staff workflow and recovery](docs/OPERATIONS.md)
+- [Release preparation and publishing](docs/RELEASING.md)
+- [Release notes 0.7.22](RELEASE_NOTES_0.7.22.md)
+
+The tag workflow builds the current package, verifies its approved checksum and
+prepares a draft release. Tags, pushing and publishing require their own scope.
+
+## Historical migration notes
 
 ### Version 0.7.16: parent identity verification
 

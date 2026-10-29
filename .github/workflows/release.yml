@@ -6,7 +6,7 @@ on:
       - "v*.*.*"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -14,97 +14,122 @@ concurrency:
 
 jobs:
   build-and-release:
-    name: Build and publish Child Center
+    name: Build verified package and draft release
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
 
     steps:
       - name: Check out tagged commit
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - name: Set up build Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
-          python-version: "3.13"
+          python-version: "3.14.4"
 
-      - name: Validate release version
+      - name: Validate release version and documents
         id: release
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          set -Eeuo pipefail
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from local_contract import VERSION, WHEEL_VERSION
 
-          VERSION="${TAG#v}"
+          if os.environ['TAG'] != 'v' + VERSION or WHEEL_VERSION != VERSION:
+              raise SystemExit('Tag, application and wheel versions must match')
+          for name in (f'RELEASE_NOTES_{VERSION}.md', 'docs/CORE_REQUIREMENTS.md', 'docs/RELEASING.md'):
+              if not Path(name).is_file():
+                  raise SystemExit('Required release document is missing: ' + name)
+          with Path(os.environ['GITHUB_OUTPUT']).open('a', encoding='utf-8') as output:
+              output.write('version=' + VERSION + '\n')
+          PY
 
-          BUILDER_VERSION="$(
-            python -c "from build_child_center_package import PACKAGE_VERSION; print(PACKAGE_VERSION)"
-          )"
-
-          if [ "$VERSION" != "$BUILDER_VERSION" ]; then
-            echo "Tag version $VERSION does not match builder version $BUILDER_VERSION"
-            exit 1
-          fi
-
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Build install package twice
+      - name: Build current install package twice
         env:
           VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -Eeuo pipefail
+          mkdir -p "$RUNNER_TEMP/build-a" "$RUNNER_TEMP/build-b" dist
+          python build_local_package.py --output "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip"
+          python build_local_package.py --output "$RUNNER_TEMP/build-b/3mm-child-center-$VERSION.zip"
+          cmp "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip" "$RUNNER_TEMP/build-b/3mm-child-center-$VERSION.zip"
+          cp "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip" "dist/3mm-child-center-$VERSION.zip"
 
-          mkdir -p "$RUNNER_TEMP/build-a"
-          mkdir -p "$RUNNER_TEMP/build-b"
-          mkdir -p dist
+      - name: Validate package metadata and immutable checksum
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import io
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import zipfile
+          from local_contract import MODULE_ID, VERSION, WHEEL_VERSION, descriptors
 
-          python build_child_center_package.py \
-            --output "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip"
+          path = Path('dist') / f'3mm-child-center-{VERSION}.zip'
+          payload = path.read_bytes()
+          with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+              names = archive.namelist()
+              if len(names) != len(set(names)):
+                  raise SystemExit('Duplicate archive entries')
+              manifest = json.loads(archive.read('manifest.json'))
+              application = json.loads(archive.read('application-extension.json'))
+              ui = json.loads(archive.read('compiled-ui.json'))
+              if any(value.get('module_id') != MODULE_ID or value.get('version') != VERSION for value in (manifest, application, ui)):
+                  raise SystemExit('Package identities/versions do not match the current contract')
+              if (manifest.get('manifest_version'), application.get('application_extension_version'), ui.get('compiled_ui_version')) != (2, 1, 1):
+                  raise SystemExit('Unexpected manifest/application/UI contract versions')
+              expected = descriptors()[1]
+              if application['service']['sdk_version'] != expected['service']['sdk_version'] or application['storage']['schema_revision'] != expected['storage']['schema_revision']:
+                  raise SystemExit('SDK/storage declaration does not match current sources')
+              wheel_name = f'service/child_center_local-{WHEEL_VERSION}-py3-none-any.whl'
+              if application['service']['artifact'] != wheel_name:
+                  raise SystemExit('Unexpected wheel path/version')
+              wheel = archive.read(wheel_name)
+              if hashlib.sha256(wheel).hexdigest() != application['service']['artifact_sha256']:
+                  raise SystemExit('Service artifact digest mismatch')
+              for entry in ui['entrypoints']:
+                  if entry['source'] not in names:
+                      raise SystemExit('UI entrypoint source is missing: ' + entry['source'])
+          notes = Path(f'RELEASE_NOTES_{VERSION}.md').read_text(encoding='utf-8')
+          checksums = re.findall(r'^SHA-256: `([a-f0-9]{64})`$', notes, re.MULTILINE)
+          actual = hashlib.sha256(payload).hexdigest()
+          if len(checksums) != 1 or checksums[0] != actual:
+              raise SystemExit('ZIP differs from the immutable approved checksum in release notes')
+          print('Verified package SHA-256: ' + actual)
+          PY
 
-          python build_child_center_package.py \
-            --output "$RUNNER_TEMP/build-b/3mm-child-center-$VERSION.zip"
-
-          cmp \
-            "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip" \
-            "$RUNNER_TEMP/build-b/3mm-child-center-$VERSION.zip"
-
-          cp \
-            "$RUNNER_TEMP/build-a/3mm-child-center-$VERSION.zip" \
-            "dist/3mm-child-center-$VERSION.zip"
-
-      - name: Create checksum
+      - name: Create checksum file
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
         working-directory: dist
-        run: sha256sum ./*.zip > SHA256SUMS
+        run: sha256sum "3mm-child-center-$VERSION.zip" > SHA256SUMS
 
       - name: Show package contents
         env:
           VERSION: ${{ steps.release.outputs.version }}
-        run: |
-          python -m zipfile -l "dist/3mm-child-center-$VERSION.zip"
+        run: python -m zipfile -l "dist/3mm-child-center-$VERSION.zip"
 
-      - name: Publish GitHub Release
+      - name: Prepare draft GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
           VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -Eeuo pipefail
-
-          NOTES_FILE="RELEASE_NOTES_$VERSION.md"
-
-          if [ -f "$NOTES_FILE" ]; then
-            gh release create "$TAG" \
-              "dist/3mm-child-center-$VERSION.zip" \
-              "dist/SHA256SUMS" \
-              --verify-tag \
-              --title "Child Center $VERSION" \
-              --notes-file "$NOTES_FILE"
-          else
-            gh release create "$TAG" \
-              "dist/3mm-child-center-$VERSION.zip" \
-              "dist/SHA256SUMS" \
-              --verify-tag \
-              --title "Child Center $VERSION" \
-              --generate-notes
-          fi
+          gh release create "$TAG" \
+            "dist/3mm-child-center-$VERSION.zip" \
+            "dist/SHA256SUMS" \
+            --draft --verify-tag \
+            --title "Child Center $VERSION" \
+            --notes-file "RELEASE_NOTES_$VERSION.md"

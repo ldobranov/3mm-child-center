@@ -1,5 +1,7 @@
 # Kiosk connection and optional reader setup — Core handoff
 
+Current 0.7.22 integration is documented in [CORE_REQUIREMENTS.md](CORE_REQUIREMENTS.md). The sections below retain historical blockers/proposals; the owner subsequently completed the mock reader test. Do not treat the old mock-provider diagnosis as a new task or a current installation guide.
+
 ## Installed blocker: mock identifier has no effective provider, 2026-10-28
 
 Owner's mock POST succeeds and Core stores all three identifier.scan.v1 events,

@@ -1,5 +1,7 @@
 # Core-owned theme and application locale
 
+For the current 0.7.22 compatibility contract see [CORE_REQUIREMENTS.md](CORE_REQUIREMENTS.md). Theme/locale integration is implemented. The system-time-zone proposal below remains open; current UI and calendar filters use Europe/Sofia.
+
 ## Requested general capability: system time zone, 2026-10-28
 
 Child Center currently formats timestamps and interprets calendar-day filters

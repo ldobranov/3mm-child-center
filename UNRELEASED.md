@@ -1,3 +1,9 @@
+# Historical pre-migration notes
+
+Current package: **0.7.22**. See [current release notes](RELEASE_NOTES_0.7.22.md),
+[Core requirements](docs/CORE_REQUIREMENTS.md) and [release procedure](docs/RELEASING.md).
+The records below refer to the historical implementation.
+
 # 0.6.9 — 2026-09-15
 
 Workflow fixes for Core beta.17: match legacy delivery readiness to ownership,
